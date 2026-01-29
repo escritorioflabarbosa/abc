@@ -11,29 +11,45 @@
       body {
         font-family: 'Inter', sans-serif;
         background-color: #f8fafc;
+        overflow-x: hidden;
       }
       .font-contract {
         font-family: 'Montserrat', sans-serif;
       }
-      .pdf-shadow {
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      /* Custom Scrollbar for better density */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
       }
       
       @media print {
         @page {
           margin: 0;
-          size: auto;
+          size: A4 portrait;
         }
-        body {
+        html, body {
+          width: 210mm;
+          height: 297mm;
           background-color: white !important;
           margin: 0 !important;
           padding: 0 !important;
+          -webkit-print-color-adjust: exact;
         }
         #root > div > nav,
         header,
         aside,
         .tabs-container,
-        footer {
+        footer,
+        .no-print {
           display: none !important;
         }
         main {
@@ -43,13 +59,14 @@
           background-color: white !important;
           width: 100% !important;
         }
-        .pdf-content-container {
+        /* Força a escala 1 na impressão para evitar borrões ou cortes por zoom */
+        .print-scale-fix {
+          transform: scale(1) !important;
+          top: 0 !important;
+          left: 0 !important;
+          position: relative !important;
           box-shadow: none !important;
-          margin: 0 !important;
-          padding: 2cm !important;
-          width: 100% !important;
-          transform: none !important;
-          min-height: auto !important;
+          border: none !important;
         }
       }
     </style>
