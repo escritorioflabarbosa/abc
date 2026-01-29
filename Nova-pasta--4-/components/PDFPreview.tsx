@@ -172,13 +172,13 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ type, data, zoom, manualOverrid
   );
 
   const PageWrapper = ({ children }: { children?: React.ReactNode }) => (
-    <div className="flex flex-col items-center justify-center w-full print:block print:p-0">
+    <div className="flex flex-col items-center justify-center w-full print:block print:w-full print:h-auto page-break">
       <div 
-        className="print-scale-fix relative shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] bg-white overflow-hidden print:shadow-none print:m-0 border border-gray-100 print:border-none" 
+        className="print-scale-fix relative shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] bg-white overflow-hidden print:shadow-none print:m-0 border border-gray-100 print:border-none print:w-full" 
         style={{ width: `${scaledWidth}px`, height: `${scaledHeight}px` }}
       >
         <div 
-          className="bg-white p-12 flex flex-col font-contract print:p-12 print:!scale-100" 
+          className="bg-white p-12 flex flex-col font-contract print:p-12 print:static print:transform-none print:w-full print:h-[297mm]" 
           style={{ 
             width: `${A4_WIDTH_PX}px`, 
             height: `${A4_HEIGHT_PX}px`, 
@@ -373,7 +373,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ type, data, zoom, manualOverrid
     }
   };
 
-  return <div className="flex flex-col items-center w-full space-y-10 pb-20 print:space-y-0 print:pb-0">{renderContract()}</div>;
+  return <div className="flex flex-col items-center w-full space-y-10 pb-20 print:space-y-0 print:pb-0 print:block">{renderContract()}</div>;
 };
 
 export default PDFPreview;
