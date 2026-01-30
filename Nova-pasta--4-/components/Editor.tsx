@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Download, ZoomIn, ZoomOut, Building2, User, Edit3, ReceiptText, Eye } from 'lucide-react';
+import { ArrowLeft, Download, ZoomIn, ZoomOut, Building2, User, Edit3, ReceiptText, Eye, FileText } from 'lucide-react';
 import PDFPreview from './PDFPreview.tsx';
 import { FormDataPF, FormDataPJ, FormDataPartnership, ContractType, HistoryItem } from '../types.ts';
 
@@ -104,14 +104,29 @@ const Editor: React.FC<EditorProps> = ({ type, onBack, onSaveToHistory }) => {
           <h3 className="text-[10px] font-black text-[#9c7d2c] uppercase flex items-center tracking-widest mb-3"><Building2 className="w-4 h-4 mr-2" /> Empresa Outorgante</h3>
           <div className="space-y-2.5">
             <input type="text" placeholder="Razão Social" className={inputStyle} value={formDataPJ.razaoSocial} onChange={e => setFormDataPJ({...formDataPJ, razaoSocial: e.target.value})} />
-            <input type="text" placeholder="CNPJ" className={inputStyle} value={formDataPJ.cnpj} onChange={e => setFormDataPJ({...formDataPJ, cnpj: e.target.value})} />
+            <div className="grid grid-cols-2 gap-2.5">
+              <input type="text" placeholder="CNPJ" className={inputStyle} value={formDataPJ.cnpj} onChange={e => setFormDataPJ({...formDataPJ, cnpj: e.target.value})} />
+              <input type="text" placeholder="Nº Processo" className={inputStyle} value={formDataPJ.numProcesso} onChange={e => setFormDataPJ({...formDataPJ, numProcesso: e.target.value})} />
+            </div>
             <input type="text" placeholder="Endereço da Sede" className={inputStyle} value={formDataPJ.enderecoSede} onChange={e => setFormDataPJ({...formDataPJ, enderecoSede: e.target.value})} />
+            <div className="grid grid-cols-2 gap-2.5">
+              <input type="text" placeholder="Cidade Sede" className={inputStyle} value={formDataPJ.cidadeSede} onChange={e => setFormDataPJ({...formDataPJ, cidadeSede: e.target.value})} />
+              <input type="text" placeholder="Estado (UF)" className={inputStyle} value={formDataPJ.estadoSede} onChange={e => setFormDataPJ({...formDataPJ, estadoSede: e.target.value})} />
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <input type="text" placeholder="Bairro Sede" className={inputStyle} value={formDataPJ.bairroSede} onChange={e => setFormDataPJ({...formDataPJ, bairroSede: e.target.value})} />
+              <input type="text" placeholder="CEP Sede" className={inputStyle} value={formDataPJ.cepSede} onChange={e => setFormDataPJ({...formDataPJ, cepSede: e.target.value})} />
+            </div>
           </div>
         </div>
         <div className="pt-5 border-t border-gray-50">
           <h3 className="text-[10px] font-black text-[#9c7d2c] uppercase flex items-center tracking-widest mb-3"><User className="w-4 h-4 mr-2" /> Representante Legal</h3>
           <div className="space-y-2.5">
             <input type="text" placeholder="Nome do Representante" className={inputStyle} value={formDataPJ.nomeRepresentante} onChange={e => setFormDataPJ({...formDataPJ, nomeRepresentante: e.target.value})} />
+            <div className="grid grid-cols-2 gap-2.5">
+              <input type="text" placeholder="Nacionalidade" className={inputStyle} value={formDataPJ.nacionalidadeRep} onChange={e => setFormDataPJ({...formDataPJ, nacionalidadeRep: e.target.value})} />
+              <input type="text" placeholder="Estado Civil" className={inputStyle} value={formDataPJ.estadoCivilRep} onChange={e => setFormDataPJ({...formDataPJ, estadoCivilRep: e.target.value})} />
+            </div>
             <div className="grid grid-cols-2 gap-2.5">
               <input type="text" placeholder="CPF" className={inputStyle} value={formDataPJ.cpfRep} onChange={e => setFormDataPJ({...formDataPJ, cpfRep: e.target.value})} />
               <input type="text" placeholder="Profissão" className={inputStyle} value={formDataPJ.profissaoRep} onChange={e => setFormDataPJ({...formDataPJ, profissaoRep: e.target.value})} />
@@ -184,15 +199,27 @@ const Editor: React.FC<EditorProps> = ({ type, onBack, onSaveToHistory }) => {
           <div className="space-y-2.5">
              <input type="text" placeholder="Nome Completo" className={inputStyle} value={formDataPF.nome} onChange={e => setFormDataPF({...formDataPF, nome: e.target.value})} />
              <div className="grid grid-cols-2 gap-2.5">
+               <input type="text" placeholder="Nacionalidade" className={inputStyle} value={formDataPF.nacionalidade} onChange={e => setFormDataPF({...formDataPF, nacionalidade: e.target.value})} />
+               <input type="text" placeholder="Estado Civil" className={inputStyle} value={formDataPF.estadoCivil} onChange={e => setFormDataPF({...formDataPF, estadoCivil: e.target.value})} />
+             </div>
+             <div className="grid grid-cols-2 gap-2.5">
                <input type="text" placeholder="CPF" className={inputStyle} value={formDataPF.cpf} onChange={e => setFormDataPF({...formDataPF, cpf: e.target.value})} />
                <input type="text" placeholder="Profissão" className={inputStyle} value={formDataPF.profissao} onChange={e => setFormDataPF({...formDataPF, profissao: e.target.value})} />
              </div>
              <input type="text" placeholder="Endereço Residencial" className={inputStyle} value={formDataPF.rua} onChange={e => setFormDataPF({...formDataPF, rua: e.target.value})} />
              <div className="grid grid-cols-2 gap-2.5">
+              <input type="text" placeholder="Cidade" className={inputStyle} value={formDataPF.cidade} onChange={e => setFormDataPF({...formDataPF, cidade: e.target.value})} />
+              <input type="text" placeholder="Estado (UF)" className={inputStyle} value={formDataPF.estado} onChange={e => setFormDataPF({...formDataPF, estado: e.target.value})} />
+             </div>
+             <div className="grid grid-cols-2 gap-2.5">
               <input type="text" placeholder="Bairro" className={inputStyle} value={formDataPF.complemento} onChange={e => setFormDataPF({...formDataPF, complemento: e.target.value})} />
               <input type="text" placeholder="CEP" className={inputStyle} value={formDataPF.cep} onChange={e => setFormDataPF({...formDataPF, cep: e.target.value})} />
              </div>
           </div>
+        </div>
+        <div className="pt-5 border-t border-gray-50">
+          <h3 className="text-[10px] font-black text-[#9c7d2c] uppercase flex items-center tracking-widest mb-3"><FileText className="w-4 h-4 mr-2" /> Dados do Processo</h3>
+          <input type="text" placeholder="Número do Processo" className={inputStyle} value={formDataPF.numProcesso} onChange={e => setFormDataPF({...formDataPF, numProcesso: e.target.value})} />
         </div>
         <div className="pt-5 border-t border-gray-50">
           <h3 className="text-[10px] font-black text-[#9c7d2c] uppercase flex items-center tracking-widest mb-3"><ReceiptText className="w-4 h-4 mr-2" /> Honorários PF</h3>
