@@ -1,8 +1,5 @@
 {
-  "name": "PERFEITO",
-  "description": "Uma plataforma jurídica de geração automática de contratos com preview em tempo real e integração de IA para revisão jurídica.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
+  "name": "FB Advocacia DocGen",
+  "description": "Automated legal document generator for FB Advocacia using PDF.co",
+  "requestFramePermissions": []
 }

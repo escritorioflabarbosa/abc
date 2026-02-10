@@ -1,155 +1,233 @@
+import React, { useState, useRef } from 'react';
+import { ClientType, PFData, PJData, GeneratedFile, PaymentMethod } from './types';
+import PFForm from './components/PFForm';
+import PJForm from './components/PJForm';
+import { 
+  generateHipossuficienciaPF, generateProcuracaoPF, generateContratoPF,
+  generateHipossuficienciaPJ, generateProcuracaoPJ, generateContratoPJ
+} from './constants';
+import { generatePdfFromHtml } from './services/pdfCoService';
 
-import React, { useState, useEffect } from 'react';
-import Dashboard from './components/Dashboard.tsx';
-import Editor from './components/Editor.tsx';
-import Login from './components/Login.tsx';
-import Home from './components/Home.tsx';
-import Finances from './components/Finances.tsx';
-import Clients from './components/Clients.tsx';
-import { ContractType, HistoryItem, User, Client } from './types.ts';
-import { Scale, LogOut, LayoutGrid, Users, Wallet, FileEdit } from 'lucide-react';
+const initialPFData: PFData = {
+  nome: '', estadoCivil: '', profissao: '', nacionalidade: '', cpf: '',
+  rua: '', complemento: '', cep: '', numeroProcesso: '', 
+  
+  paymentMethod: PaymentMethod.BOLETO,
+  valorTotal: '',
+  entrada: '', dataEntrada: '', vezesParcelas: '', valorParcela: '',
+  dataPagamentoParcelas: '', 
+  
+  estado: 'Rio de Janeiro', cidade: 'Rio de Janeiro', dataAssinatura: new Date().toISOString().split('T')[0]
+};
 
-const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [currentView, setCurrentView] = useState<'HOME' | 'DASHBOARD_EDITOR' | 'EDITOR_SCREEN' | 'FINANCES' | 'CLIENTS'>('HOME');
-  const [selectedType, setSelectedType] = useState<ContractType | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+const initialPJData: PJData = {
+  nomeEmpresa: '', cnpj: '', enderecoEmpresa: '', numeroEmpresa: '', bairroEmpresa: '',
+  cidadeEmpresa: 'Rio de Janeiro', ufEmpresa: 'RJ', cepEmpresa: '',
+  representanteLegal: '', nacionalidadeRep: '', profissaoRep: '', estadoCivilRep: '',
+  cpfRep: '', enderecoRep: '', dataAssinatura: new Date().toISOString().split('T')[0],
+  nomeRepresentanteLegalAssinatura: '', numeroProcesso: '',
+  
+  paymentMethod: PaymentMethod.BOLETO,
+  valorTotal: '',
+  entrada: '', dataEntrada: '', vezesParcelas: '', valorParcela: '',
+  dataPagamentoParcelas: '', 
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('lawyer_editor_user');
-    if (savedUser) setUser(JSON.parse(savedUser));
+  estadoForo: 'RJ'
+};
 
-    const savedHistory = localStorage.getItem('lawyer_editor_history');
-    if (savedHistory) setHistory(JSON.parse(savedHistory));
+function App() {
+  const [clientType, setClientType] = useState<ClientType>(ClientType.PF);
+  const [pfData, setPfData] = useState<PFData>(initialPFData);
+  const [pjData, setPjData] = useState<PJData>(initialPJData);
+  const [loading, setLoading] = useState(false);
+  const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
+  
+  const [selectedDocs, setSelectedDocs] = useState({
+    hipossuficiencia: true,
+    procuracao: true,
+    contrato: true
+  });
 
-    const savedClients = localStorage.getItem('lawyer_editor_clients');
-    if (savedClients) setClients(JSON.parse(savedClients));
-  }, []);
-
-  const handleLogin = (newUser: User) => {
-    setUser(newUser);
-    localStorage.setItem('lawyer_editor_user', JSON.stringify(newUser));
-    setCurrentView('HOME');
+  const handlePFChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setPfData({ ...pfData, [e.target.name]: e.target.value });
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('lawyer_editor_user');
-    setCurrentView('HOME');
+  const handlePJChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setPjData({ ...pjData, [e.target.name]: e.target.value });
   };
 
-  const handleStartContract = (type: ContractType) => {
-    setSelectedType(type);
-    setCurrentView('EDITOR_SCREEN');
-  };
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleBackToHub = () => {
-    setCurrentView('HOME');
-    setSelectedType(null);
-  };
+    if (formRef.current && !formRef.current.checkValidity()) {
+        formRef.current.reportValidity();
+        return;
+    }
 
-  const addToHistory = (item: Omit<HistoryItem, 'id' | 'date'>) => {
-    const newItem: HistoryItem = {
-      ...item,
-      id: Date.now().toString(),
-      date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-    };
-    const updatedHistory = [newItem, ...history].slice(0, 50);
-    setHistory(updatedHistory);
-    localStorage.setItem('lawyer_editor_history', JSON.stringify(updatedHistory));
-  };
+    setLoading(true);
+    setGeneratedFiles([]);
+    const files: GeneratedFile[] = [];
 
-  const handleValidateClient = (newClient: Client) => {
-    const updatedClients = [{ ...newClient, paymentHistory: [] }, ...clients];
-    setClients(updatedClients);
-    localStorage.setItem('lawyer_editor_clients', JSON.stringify(updatedClients));
-  };
+    try {
+      // Hipossuficiencia
+      if (selectedDocs.hipossuficiencia) {
+        const html = clientType === ClientType.PF ? generateHipossuficienciaPF(pfData) : generateHipossuficienciaPJ(pjData);
+        const url = await generatePdfFromHtml(html, `Hipossuficiencia_${clientType === ClientType.PF ? pfData.nome : pjData.nomeEmpresa}.pdf`);
+        files.push({ name: 'Declaração de Hipossuficiência', url });
+      }
 
-  const handleUpdateClient = (updatedClient: Client) => {
-    const updatedClients = clients.map(c => c.id === updatedClient.id ? updatedClient : c);
-    setClients(updatedClients);
-    localStorage.setItem('lawyer_editor_clients', JSON.stringify(updatedClients));
-  };
+      // Procuracao
+      if (selectedDocs.procuracao) {
+        const html = clientType === ClientType.PF ? generateProcuracaoPF(pfData) : generateProcuracaoPJ(pjData);
+        const url = await generatePdfFromHtml(html, `Procuracao_${clientType === ClientType.PF ? pfData.nome : pjData.nomeEmpresa}.pdf`);
+        files.push({ name: 'Procuração', url });
+      }
 
-  const handleRemoveClient = (id: string) => {
-    const updatedClients = clients.filter(c => c.id !== id);
-    setClients(updatedClients);
-    localStorage.setItem('lawyer_editor_clients', JSON.stringify(updatedClients));
-  };
+      // Contrato
+      if (selectedDocs.contrato) {
+        const html = clientType === ClientType.PF ? generateContratoPF(pfData) : generateContratoPJ(pjData);
+        const url = await generatePdfFromHtml(html, `Contrato_${clientType === ClientType.PF ? pfData.nome : pjData.nomeEmpresa}.pdf`);
+        files.push({ name: 'Contrato de Honorários', url });
+      }
 
-  if (!user) return <Login onLogin={handleLogin} />;
-
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'CLIENTS': return <Clients user={user} clients={clients} history={history} onBack={handleBackToHub} onValidateClient={handleValidateClient} onRemoveClient={handleRemoveClient} />;
-      case 'FINANCES': return <Finances user={user} clients={clients} onBack={handleBackToHub} onUpdateClient={handleUpdateClient} />;
-      case 'EDITOR_SCREEN': return selectedType ? <Editor type={selectedType} onBack={() => setCurrentView('DASHBOARD_EDITOR')} onSaveToHistory={addToHistory} /> : null;
-      case 'DASHBOARD_EDITOR': return <Dashboard onStartContract={handleStartContract} history={history} />;
-      default: return <Home user={user} clients={clients} onSelectModule={(m) => {
-        if (m === 'EDITOR') setCurrentView('DASHBOARD_EDITOR');
-        else if (m === 'CLIENTS') setCurrentView('CLIENTS');
-        else setCurrentView('FINANCES');
-      }} />;
+      setGeneratedFiles(files);
+    } catch (error) {
+      alert("Erro ao gerar documentos. Verifique o console ou sua chave de API.");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-sans pb-16 md:pb-0 overflow-hidden">
-      {/* Desktop Top Nav - Compact */}
-      <nav className="hidden md:flex bg-white border-b px-6 py-2.5 items-center justify-between sticky top-0 z-50 shadow-sm h-14">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={handleBackToHub}>
-          <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center">
-             <Scale className="w-5 h-5 text-[#9c7d2c]" />
-          </div>
-          <span className="text-lg font-black tracking-tight text-gray-900">Lawyer <span className="text-[#9c7d2c]">Pro</span></span>
+    <div className="min-h-screen pb-10">
+      {/* Header */}
+      <header className="bg-slate-900 text-gold-400 py-6 shadow-lg border-b-4 border-gold-500">
+        <div className="container mx-auto px-4 flex flex-col items-center justify-center">
+          <h1 className="text-4xl font-serif font-bold tracking-wider">FB ADVOCACIA</h1>
+          <p className="text-sm mt-2 text-slate-300">Gerador Automático de Documentos</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
-            <p className="text-xs font-bold text-gray-800 leading-none">{user.user_metadata?.full_name?.split(' ')[0] || 'Usuário'}</p>
-            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tight mt-0.5">{user.role}</p>
-          </div>
-          <button onClick={handleLogout} className="p-1.5 text-gray-300 hover:text-red-500 transition-all"><LogOut className="w-4 h-4" /></button>
-        </div>
-      </nav>
+      </header>
 
-      {/* Mobile Top Header */}
-      <div className="md:hidden flex items-center justify-between p-3 bg-white border-b sticky top-0 z-50 h-12">
-        <div className="flex items-center space-x-2" onClick={handleBackToHub}>
-          <Scale className="w-5 h-5 text-[#9c7d2c]" />
-          <span className="font-black text-xs tracking-tight">Lawyer <span className="text-[#9c7d2c]">Pro</span></span>
-        </div>
-        <button onClick={handleLogout} className="text-gray-400"><LogOut className="w-4 h-4" /></button>
-      </div>
-
-      <main className="flex-1 overflow-y-auto">
-        {renderCurrentView()}
-      </main>
-
-      {/* Mobile Bottom Navigation - Compact */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-14 px-1 z-[100] shadow-lg">
-        {[
-          { icon: LayoutGrid, label: 'Início', view: 'HOME' },
-          { icon: FileEdit, label: 'Editor', view: 'DASHBOARD_EDITOR' },
-          { icon: Users, label: 'Clientes', view: 'CLIENTS' },
-          { icon: Wallet, label: 'Finanças', view: 'FINANCES' }
-        ].map((item) => (
-          <button 
-            key={item.view}
-            onClick={() => setCurrentView(item.view as any)} 
-            className={`flex flex-col items-center flex-1 py-1 ${currentView === item.view || (item.view === 'DASHBOARD_EDITOR' && currentView === 'EDITOR_SCREEN') ? 'text-[#9c7d2c]' : 'text-gray-400'}`}
+      {/* Main Content */}
+      <main className="container mx-auto px-4 mt-8 max-w-5xl">
+        
+        {/* Type Selector */}
+        <div className="flex justify-center gap-4 mb-8">
+          <button
+            type="button"
+            onClick={() => setClientType(ClientType.PF)}
+            className={`px-8 py-3 rounded-lg font-bold transition-all duration-300 ${clientType === ClientType.PF ? 'bg-gold-500 text-white shadow-md scale-105' : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-100'}`}
           >
-            <item.icon className="w-4 h-4" />
-            <span className="text-[8px] font-bold uppercase mt-1">{item.label}</span>
+            Pessoa Física
           </button>
-        ))}
-      </nav>
+          <button
+            type="button"
+            onClick={() => setClientType(ClientType.PJ)}
+            className={`px-8 py-3 rounded-lg font-bold transition-all duration-300 ${clientType === ClientType.PJ ? 'bg-gold-500 text-white shadow-md scale-105' : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-100'}`}
+          >
+            Pessoa Jurídica
+          </button>
+        </div>
 
-      <footer className="hidden md:block bg-white border-t py-3 text-center text-gray-400 text-[8px] font-bold uppercase tracking-[0.2em]">
-        &copy; 2024 Lawyer Pro • Legal Technology Solutions
-      </footer>
+        {/* Form Container */}
+        <form ref={formRef} className="bg-white rounded-xl shadow-xl p-8 border border-slate-200">
+          <h2 className="text-2xl font-serif font-bold text-slate-800 mb-6 border-l-4 border-gold-500 pl-4">
+            Preencha os dados: {clientType === ClientType.PF ? 'Pessoa Física' : 'Pessoa Jurídica'}
+          </h2>
+          
+          {clientType === ClientType.PF ? (
+            <PFForm data={pfData} onChange={handlePFChange} />
+          ) : (
+            <PJForm data={pjData} onChange={handlePJChange} />
+          )}
+
+          {/* Document Selection */}
+          <div className="mt-8 bg-slate-50 p-6 rounded-lg border border-slate-200">
+            <h3 className="font-bold text-slate-800 mb-4">Selecionar Documentos para Gerar:</h3>
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={selectedDocs.hipossuficiencia} 
+                  onChange={(e) => setSelectedDocs({...selectedDocs, hipossuficiencia: e.target.checked})}
+                  className="w-5 h-5 text-gold-600 rounded focus:ring-gold-500"
+                />
+                <span>Declaração de Hipossuficiência</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={selectedDocs.procuracao} 
+                  onChange={(e) => setSelectedDocs({...selectedDocs, procuracao: e.target.checked})}
+                  className="w-5 h-5 text-gold-600 rounded focus:ring-gold-500"
+                />
+                <span>Procuração</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={selectedDocs.contrato} 
+                  onChange={(e) => setSelectedDocs({...selectedDocs, contrato: e.target.checked})}
+                  className="w-5 h-5 text-gold-600 rounded focus:ring-gold-500"
+                />
+                <span>Contrato de Honorários</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="mt-8 flex justify-end">
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className={`
+                bg-slate-900 text-gold-400 font-bold text-lg px-10 py-4 rounded-lg shadow-lg 
+                hover:bg-slate-800 hover:text-gold-300 transition-all duration-300 flex items-center
+                ${loading ? 'opacity-70 cursor-not-allowed' : ''}
+              `}
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gold-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Gerando Documentos...
+                </>
+              ) : 'Gerar Documentos PDF'}
+            </button>
+          </div>
+        </form>
+
+        {/* Results */}
+        {generatedFiles.length > 0 && (
+          <div className="mt-8 bg-green-50 rounded-xl shadow border border-green-200 p-8">
+            <h2 className="text-2xl font-bold text-green-800 mb-4">Documentos Gerados com Sucesso!</h2>
+            <div className="space-y-3">
+              {generatedFiles.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between bg-white p-4 rounded border border-green-100 shadow-sm">
+                  <span className="font-semibold text-slate-700">{file.name}</span>
+                  <a 
+                    href={file.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    Baixar PDF
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
-};
+}
 
 export default App;
