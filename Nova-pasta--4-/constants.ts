@@ -1,16 +1,16 @@
 import { PFData, PJData, PaymentMethod } from './types';
 
 // Webhook URL específica para Pessoa Física conforme solicitado
-export const WEBHOOK_URL_PF = "https://escritoriofla.app.n8n.cloud/webhook-test/abfb9471-9656-4da5-a89d-8f323244ef12";
-export const WEBHOOK_URL_PJ = "https://escritoriofla.app.n8n.cloud/webhook-test/87cb8ce2-0f7f-439c-96c9-c43fe3c6f215";
+export const WEBHOOK_URL_PF = "https://escritoriofla.app.n8n.cloud/webhook/abfb9471-9656-4da5-a89d-8f323244ef12";
+export const WEBHOOK_URL_PJ = "https://escritoriofla.app.n8n.cloud/webhook/87cb8ce2-0f7f-439c-96c9-c43fe3c6f215";
 
 // PDF Configuration - Strict A4 with 2cm margins
 export const PDF_CONFIG = {
-    paperSize: 'A4',
-    // We set explicit API margins to match CSS @page (2cm = 20mm)
-    margins: '20mm 20mm 20mm 20mm', 
-    orientation: 'Portrait',
-    printBackground: true
+  paperSize: 'A4',
+  // We set explicit API margins to match CSS @page (2cm = 20mm)
+  margins: '20mm 20mm 20mm 20mm',
+  orientation: 'Portrait',
+  printBackground: true
 };
 
 // Helpers for date formatting
@@ -24,14 +24,14 @@ const formatDate = (date: Date) => {
 
 // Function to generate the Payment Schedule Table
 const generatePaymentSchedule = (
-  entryValue: string, 
-  entryDateStr: string, 
-  installments: string, 
-  installmentValue: string, 
+  entryValue: string,
+  entryDateStr: string,
+  installments: string,
+  installmentValue: string,
   paymentDay: string
 ): string => {
   let rows = '';
-  
+
   // 1. Entry Row
   if (entryValue && entryDateStr) {
     const entryDate = new Date(entryDateStr + 'T12:00:00');
@@ -47,7 +47,7 @@ const generatePaymentSchedule = (
   // 2. Installments Rows
   const numInstallments = parseInt(installments) || 0;
   const payDay = parseInt(paymentDay) || 10;
-  
+
   if (numInstallments > 0 && entryDateStr) {
     const startDate = new Date(entryDateStr + 'T12:00:00');
     let currentMonth = startDate.getMonth() + 1;
@@ -58,9 +58,9 @@ const generatePaymentSchedule = (
         currentMonth = 0;
         currentYear++;
       }
-      
+
       const installmentDate = new Date(currentYear, currentMonth, payDay);
-      
+
       rows += `
         <tr>
           <td>Parcela ${i}/${numInstallments}</td>
@@ -68,7 +68,7 @@ const generatePaymentSchedule = (
           <td>R$ ${installmentValue}</td>
         </tr>
       `;
-      
+
       currentMonth++;
     }
   }
@@ -372,7 +372,7 @@ export const generateProcuracaoPF = (data: PFData) => `
 
 export const generateContratoPF = (data: PFData) => {
   const isBoleto = data.paymentMethod === PaymentMethod.BOLETO;
-  
+
   let paymentText = "";
   if (isBoleto) {
     paymentText = `Fará jus o contrato o valor de <strong>R$ ${data.valorTotal}</strong> de honorários iniciais, 
@@ -646,7 +646,7 @@ export const generateProcuracaoPJ = (data: PJData) => `
 
 export const generateContratoPJ = (data: PJData) => {
   const isBoleto = data.paymentMethod === PaymentMethod.BOLETO;
-  
+
   let paymentText = "";
   if (isBoleto) {
     paymentText = `Fará jus o contrato o valor de <strong>R$ ${data.valorTotal}</strong> de honorários iniciais, 
