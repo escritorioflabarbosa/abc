@@ -1,0 +1,5 @@
+{
+  "name": "FB Advocacia DocGen",
+  "description": "Automated legal document generator for FB Advocacia using n8n Webhooks",
+  "requestFramePermissions": []
+}
