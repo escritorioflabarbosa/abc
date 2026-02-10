@@ -1,6 +1,8 @@
 
 export const sendToWebhook = async (url: string, payload: any): Promise<void> => {
   try {
+    console.log(`Sending payload to webhook: ${url}`);
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {

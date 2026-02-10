@@ -101,6 +101,8 @@ function App() {
       };
 
       const webhookUrl = clientType === ClientType.PF ? WEBHOOK_URL_PF : WEBHOOK_URL_PJ;
+      
+      console.log(`Iniciando envio para ${clientType}. URL: ${webhookUrl}`);
 
       await sendToWebhook(webhookUrl, payload);
       setSuccess(true);

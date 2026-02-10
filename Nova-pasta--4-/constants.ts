@@ -1,5 +1,6 @@
 import { PFData, PJData, PaymentMethod } from './types';
 
+// Webhook URL específica para Pessoa Física conforme solicitado
 export const WEBHOOK_URL_PF = "https://escritoriofla.app.n8n.cloud/webhook-test/abfb9471-9656-4da5-a89d-8f323244ef12";
 export const WEBHOOK_URL_PJ = "https://escritoriofla.app.n8n.cloud/webhook-test/87cb8ce2-0f7f-439c-96c9-c43fe3c6f215";
 
